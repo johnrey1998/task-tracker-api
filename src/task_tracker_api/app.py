@@ -6,7 +6,9 @@ import jwt
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
+from fastapi.security import OAuth2PasswordBearer
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 app = FastAPI()
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -14,6 +16,16 @@ DB_NAME = os.getenv("DB_NAME", "task_tracker_api")
 DB_USER = os.getenv("DB_USER", "admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "change-this-secret")
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return int(user_id)
+    except (jwt.InvalidTokenError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 def get_db():
