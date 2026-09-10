@@ -263,3 +263,35 @@ def test_get_current_user_invalid_token():
         get_current_user("not-a-valid-token")
 
     assert error.value.status_code == 401
+
+def test_get_tasks_with_pagination():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchall.return_value = [
+        (2, 1, "Second task", "Second description"),
+    ]
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+
+    try:
+        response = client.get(
+            "/tasks?page=2&limit=1",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                "id": 2,
+                "user_id": 1,
+                "title": "Second task",
+                "description": "Second description",
+            }
+        ]
+
+        cursor.execute.assert_called_once()
+        query_params = cursor.execute.call_args.args[1]
+        assert query_params == (1, 1, 1)
+    finally:
+        app.dependency_overrides.clear()

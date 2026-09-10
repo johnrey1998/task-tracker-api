@@ -126,9 +126,13 @@ def create_task(task: TaskCreateRequest, user_id: int = Depends(get_current_user
 
 @app.get("/tasks")
 def get_tasks(
+    page: int = 1,
+    limit: int = 10,
     user_id: int = Depends(get_current_user),
-    connection=Depends(get_db),
+    connection=Depends(get_db)
 ):
+    offset = (page - 1) * limit
+
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -136,8 +140,9 @@ def get_tasks(
             FROM tasks
             WHERE user_id = %s
             ORDER BY id
+            LIMIT %s OFFSET %s
             """,
-            (user_id,),
+            (user_id, limit, offset),
         )
         rows = cursor.fetchall()
 

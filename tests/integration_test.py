@@ -154,3 +154,28 @@ def test_user_cannot_access_another_users_tasks(client, auth_headers):
         f"/tasks/{task_id}",
         headers=second_headers,
     ).status_code == 404
+
+
+@pytest.mark.integration
+def test_task_pagination(client, auth_headers):
+    for index in range(5):
+        response = client.post(
+            "/tasks",
+            json={
+                "title": f"Task {index + 1}",
+                "description": f"Description {index + 1}",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+
+    response = client.get(
+        "/tasks?page=2&limit=2",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert [task["title"] for task in response.json()] == [
+        "Task 3",
+        "Task 4",
+    ]
