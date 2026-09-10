@@ -81,3 +81,30 @@ def login(user: LoginRequest, connection=Depends(get_db)):
         algorithm="HS256",
     )
     return {"access_token": token, "token_type": "bearer"}
+
+class TaskCreateRequest(BaseModel):
+    title: str
+    description: str
+
+class TaskUpdateRequest(BaseModel):
+    title: str
+    description: str
+
+
+@app.post("/tasks")
+def create_task():
+    pass
+
+@app.get("/tasks")
+def get_tasks():
+    pass
+
+@app.patch("/tasks/{task_id}")
+def update_task(task_id: int):
+    pass
+
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: int):
+    pass
+
+
