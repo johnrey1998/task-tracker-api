@@ -49,7 +49,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-@app.post("/register")
+@app.post("/register", status_code=201)
 def register(user: RegisterRequest, connection=Depends(get_db)):
     password_hash = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt()).decode()
 
@@ -103,7 +103,7 @@ class TaskUpdateRequest(BaseModel):
     description: str
 
 
-@app.post("/tasks")
+@app.post("/tasks", status_code=201)
 def create_task(task: TaskCreateRequest, user_id: int = Depends(get_current_user), connection=Depends(get_db)):
     with connection.cursor() as cursor:
         cursor.execute(

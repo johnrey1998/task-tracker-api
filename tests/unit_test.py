@@ -24,7 +24,7 @@ def test_register_success():
             "password": "password"
         })
 
-        assert res.status_code == 200
+        assert res.status_code == 201
         data = res.json()
         assert data == {"id": 1, "name": "testuser", "email": "test@example.com"}
         db.commit.assert_called_once()
@@ -115,7 +115,7 @@ def test_create_task_success():
             headers={"Authorization": "Bearer test-token"},
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 201
         assert response.json() == {
             "id": 1,
             "user_id": 1,
