@@ -128,22 +128,40 @@ def create_task(task: TaskCreateRequest, user_id: int = Depends(get_current_user
 def get_tasks(
     page: int = 1,
     limit: int = 10,
+    search: str | None = None,
     user_id: int = Depends(get_current_user),
     connection=Depends(get_db)
 ):
+
     offset = (page - 1) * limit
+    search = search.strip() if search else None
+
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT id, user_id, title, description
-            FROM tasks
-            WHERE user_id = %s
-            ORDER BY id
-            LIMIT %s OFFSET %s
-            """,
-            (user_id, limit, offset),
-        )
+        if search:
+            cursor.execute(
+                """
+                SELECT id, user_id, title, description
+                FROM tasks
+                WHERE user_id = %s AND (title ILIKE %s OR description ILIKE %s)
+                ORDER BY id
+                LIMIT %s OFFSET %s
+                """,
+                (user_id, f"%{search}%", f"%{search}%", limit, offset),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, user_id, title, description
+                FROM tasks
+                WHERE user_id = %s
+                ORDER BY id
+                LIMIT %s OFFSET %s
+                """,
+                (user_id, limit, offset),
+            )
+        
+        
         rows = cursor.fetchall()
 
     return [

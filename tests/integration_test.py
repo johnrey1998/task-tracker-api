@@ -179,3 +179,27 @@ def test_task_pagination(client, auth_headers):
         "Task 3",
         "Task 4",
     ]
+
+@pytest.mark.integration
+def test_task_filtering(client, auth_headers):
+    tasks = [
+        {"title": "Write report", "description": "Prepare monthly report"},
+        {"title": "Buy groceries", "description": "Buy milk and bread"},
+        {"title": "Review report", "description": "Check the report data"},
+    ]
+
+    for task in tasks:
+        response = client.post(
+            "/tasks",
+            json=task,
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+
+    response = client.get(
+        "/tasks?search=report",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert [task["title"] for task in response.json()] == ["Write report", "Review report"]

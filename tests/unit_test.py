@@ -295,3 +295,35 @@ def test_get_tasks_with_pagination():
         assert query_params == (1, 1, 1)
     finally:
         app.dependency_overrides.clear()
+
+def test_get_tasks_with_filtering():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchall.return_value = [
+        (1, 1, "Write report", "Prepare the monthly report"),
+    ]
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+
+    try:
+        response = client.get(
+            "/tasks?page=1&limit=10&search=report",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                "id": 1,
+                "user_id": 1,
+                "title": "Write report",
+                "description": "Prepare the monthly report"
+            }
+        ]
+
+        cursor.execute.assert_called_once()
+        query_params = cursor.execute.call_args.args[1]
+        assert query_params == (1, "%report%", "%report%", 10, 0)
+    finally:
+        app.dependency_overrides.clear()
