@@ -49,7 +49,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-@app.post("/register", status_code=201)
+@app.post("/register")
 def register(user: RegisterRequest, connection=Depends(get_db)):
     password_hash = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt()).decode()
 
@@ -104,19 +104,95 @@ class TaskUpdateRequest(BaseModel):
 
 
 @app.post("/tasks")
-def create_task():
-    pass
+def create_task(task: TaskCreateRequest, user_id: int = Depends(get_current_user), connection=Depends(get_db)):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO tasks (user_id, title, description)
+            VALUES (%s, %s, %s)
+            RETURNING id, user_id, title, description
+            """,
+            (user_id, task.title, task.description),
+        )
+        row = cursor.fetchone()
+        connection.commit()
+
+    return {
+        "id": row[0],
+        "user_id": row[1],
+        "title": row[2],
+        "description": row[3],
+    }
 
 @app.get("/tasks")
-def get_tasks():
-    pass
+def get_tasks(
+    user_id: int = Depends(get_current_user),
+    connection=Depends(get_db),
+):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT id, user_id, title, description
+            FROM tasks
+            WHERE user_id = %s
+            ORDER BY id
+            """,
+            (user_id,),
+        )
+        rows = cursor.fetchall()
+
+    return [
+        {
+            "id": row[0],
+            "user_id": row[1],
+            "title": row[2],
+            "description": row[3],
+        }
+        for row in rows
+    ]
 
 @app.patch("/tasks/{task_id}")
-def update_task(task_id: int):
-    pass
+def update_task(
+    task_id: int,
+    task: TaskUpdateRequest,
+    user_id: int = Depends(get_current_user),
+    connection=Depends(get_db),
+):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE tasks
+            SET title = %s, description = %s
+            WHERE id = %s AND user_id = %s
+            RETURNING id, user_id, title, description
+            """,
+            (task.title, task.description, task_id, user_id),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Task not found")
+        connection.commit()
 
-@app.delete("/tasks/{task_id}")
-def delete_task(task_id: int):
-    pass
+    return {
+        "id": row[0],
+        "user_id": row[1],
+        "title": row[2],
+        "description": row[3],
+    }
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(
+    task_id: int,
+    user_id: int = Depends(get_current_user),
+    connection=Depends(get_db),
+):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "DELETE FROM tasks WHERE id = %s AND user_id = %s",
+            (task_id, user_id),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Task not found")
+        connection.commit()
 
 

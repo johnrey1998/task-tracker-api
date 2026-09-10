@@ -24,7 +24,7 @@ def test_register_success():
             "password": "password"
         })
 
-        assert res.status_code == 201
+        assert res.status_code == 200
         data = res.json()
         assert data == {"id": 1, "name": "testuser", "email": "test@example.com"}
         db.commit.assert_called_once()
@@ -94,6 +94,160 @@ def test_login_invalid_password():
 
         assert response.status_code == 401
         assert response.json() == {"detail": "Invalid credentials"}
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_create_task_success():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value = (1, 1, "First task", "Test task creation")
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.post(
+            "/tasks",
+            json={
+                "title": "First task",
+                "description": "Test task creation",
+            },
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "id": 1,
+            "user_id": 1,
+            "title": "First task",
+            "description": "Test task creation",
+        }
+        db.commit.assert_called_once()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_get_tasks_success():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchall.return_value = [
+        (1, 1, "First task", "Test task creation"),
+        (2, 1, "Second task", "Another task"),
+    ]
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.get(
+            "/tasks",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                "id": 1,
+                "user_id": 1,
+                "title": "First task",
+                "description": "Test task creation",
+            },
+            {
+                "id": 2,
+                "user_id": 1,
+                "title": "Second task",
+                "description": "Another task",
+            },
+        ]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_update_task_success():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value = (1, 1, "Updated task", "Updated description")
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.patch(
+            "/tasks/1",
+            json={
+                "title": "Updated task",
+                "description": "Updated description",
+            },
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "id": 1,
+            "user_id": 1,
+            "title": "Updated task",
+            "description": "Updated description",
+        }
+        db.commit.assert_called_once()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_update_task_not_found():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value = None
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.patch(
+            "/tasks/999",
+            json={"title": "Missing", "description": "Missing"},
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Task not found"}
+        db.commit.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_delete_task_success():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.rowcount = 1
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.delete(
+            "/tasks/1",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 204
+        assert response.content == b""
+        db.commit.assert_called_once()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_delete_task_not_found():
+    db = MagicMock()
+    cursor = db.cursor.return_value.__enter__.return_value
+    cursor.rowcount = 0
+
+    app.dependency_overrides[get_db] = lambda: db
+    app.dependency_overrides[get_current_user] = lambda: 1
+    try:
+        response = client.delete(
+            "/tasks/999",
+            headers={"Authorization": "Bearer test-token"},
+        )
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Task not found"}
+        db.commit.assert_not_called()
     finally:
         app.dependency_overrides.clear()
 
