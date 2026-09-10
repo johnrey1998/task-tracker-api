@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks (user_id);
