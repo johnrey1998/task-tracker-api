@@ -11,10 +11,10 @@ from app.security import decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-DatabaseDependency = Annotated[Session, Depends(get_database)]
-TokenDependency = Annotated[str, Depends(oauth2_scheme)]
+SessionDep = Annotated[Session, Depends(get_database)]
+TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
-def get_current_user_id(token: TokenDependency) -> int:
+def get_current_user_id(token: TokenDep) -> int:
     try:
         payload = decode_token(token)
         subject = payload["sub"]

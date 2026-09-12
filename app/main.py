@@ -21,13 +21,13 @@ def create_app() -> FastAPI:
     )
 
     application.include_router(
-        auth_router,
+        users_router,
         prefix=f"{settings.api_prefix}/users",
         tags=["users"]
     )
 
     application.include_router(
-        auth_router,
+        tasks_router,
         prefix=f"{settings.api_prefix}/tasks",
         tags=["tasks"]
     )
