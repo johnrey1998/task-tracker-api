@@ -1,0 +1,15 @@
+services:
+  db-test:
+    image: postgres:18
+    container_name: task-tracker-test-db
+    environment:
+      POSTGRES_DB: task_tracker_test
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_test:/var/lib/postgresql
+
+volumes:
+  pgdata_test:
