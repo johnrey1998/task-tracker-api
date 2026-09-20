@@ -1,4 +1,4 @@
-from pydantic import Field, PostgresDsn, ValidationError
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.exceptions import ConfigurationError
@@ -7,24 +7,24 @@ class Settings(BaseSettings):
     app_name: str = "Task Tracker API"
     api_prefix: str = "/api/v1"
 
-    database_url: PostgresDsn = Field(default="postgresql+psycopg://admin:password@localhost:5432/task_tracker", alias="DATABASE_URL")
+    postgres_user: str = "admin"
+    postgres_password: str = "password"
+    postgres_db: str = "task_tracker"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
 
-    jwt_secret: str = Field(default="secret", alias="JWT_SECRET")
-
+    jwt_secret: str = "secret"
     jwt_algorithm: str = "HS256"
     token_expiration_hours: int = 8
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    @computed_field
+    @property
+    def database_url(self) -> str:
+        return f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False)
 
 
-def load_settings() -> Settings:
-    try:
-        return Settings()
-    except ValidationError as error:
-        raise ConfigurationError("Application configuration invalid") from error
-
-
-settings = load_settings()
+settings = Settings()
 
 
 

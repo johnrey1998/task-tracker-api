@@ -46,35 +46,15 @@ tests/          # Database, API and service tests
 
 ## Configuration
 
-For local development, create `.env`:
-
-```env
-DATABASE_URL=postgresql+psycopg://admin:password@localhost:5432/task_tracker
-JWT_SECRET=replace-this-with-a-long-random-secret
-```
+To run this project, rename [.env.example](.env.example) to `.env` and fill the values to your liking.
 
 ## Run With Docker
-
-The API container receives these settings from `docker-compose.yml`:
-
-```env
-DATABASE_URL=postgresql+psycopg://admin:password@db:5432/task_tracker
-JWT_SECRET=change-this-in-prod
-```
-
-Use `db` as the database hostname inside Docker. Do not use `localhost` for the container's `DATABASE_URL`; inside the API container, `localhost` refers to the API container itself.
 
 Start the API and PostgreSQL database:
 
 ```bash
 docker compose up --build
 ```
-
-The API container runs the latest Alembic migrations before starting the server. The API is available at:
-
-- API: http://localhost:8000
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
 
 Run the services in the background:
 

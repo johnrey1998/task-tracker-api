@@ -7,7 +7,7 @@ RUN uv sync --locked --no-install-project
 
 COPY app ./app
 COPY migrations ./migrations
-copy alembic.ini ./
+COPY alembic.ini ./
 
 EXPOSE 8000
 
