@@ -4,6 +4,7 @@ from app.auth.router import router as auth_router
 from app.config import settings
 from app.tasks.router import router as tasks_router
 from app.users.router import router as users_router
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -35,3 +36,17 @@ def create_app() -> FastAPI:
     return application
 
 app = create_app()
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
