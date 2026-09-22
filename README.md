@@ -1,183 +1,82 @@
 # Task Tracker API
 
-A RESTful task-tracking API.
+A production-ready RESTful task-tracking backend built with FastAPI, SQLAlchemy, and PostgreSQL.
 
-## Stack
+## Frontend & Demo
+- **Live Demo:** [Task Tracker Demo](https://task-tracker-frontend-three-gamma.vercel.app/)
+- **Frontend Repository:** [Task Tracker Frontend](https://github.com/johnrey1998/task-tracker-frontend)
 
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Pydantic
-- pytest
-- Alembic
-- Docker
+---
 
-## Prerequisites
+## Tech Stack
+- **Framework:** FastAPI
+- **Database / ORM:** PostgreSQL, SQLAlchemy, Alembic
+- **Package Manager:** `uv`
+- **Testing:** Pytest
 
-Install:
-- Python 3.14+
-- Docker and Docker Compose
-- uv
+---
 
-## Documentation
+## Getting Started
 
-- [HTTP status code guide](docs/http-status-codes.md)
-- [ReDoc](http://localhost:8000/redoc) (when the API is running)
-
-## Overview
-
-Task Tracker API is a RESTful API for registering users, authenticating with JWTs, and managing tasks. The API uses PostgreSQL for persistence and Alembic for database migrations.
-
-## Project Structure
-
-```text
-app/
-├── auth/       # Authentication routes, schemas, and services
-├── tasks/      # Task routes, models, schemas, and services
-├── users/      # User routes, models, schemas, and services
-├── config.py   # Environment-based configuration
-├── database.py # SQLAlchemy engine and sessions
-├── deps.py     # FastAPI dependencies
-└── main.py     # FastAPI application
-
-migrations/     # Alembic migrations
-tests/          # Database, API and service tests
+### 1. Environment Setup
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
 ```
 
-## Configuration
-
-To run this project, rename [.env.example](.env.example) to `.env` and fill the values to your liking.
-
-## Run With Docker
-
-Start the API and PostgreSQL database:
-
+### 2. Running with Docker
 ```bash
 docker compose up --build
 ```
+- API available at `http://localhost:8000/api/v1` (Swagger Docs at `/docs`)
+- Stop containers: `docker compose down`
+- Stop & wipe data: `docker compose down -v`
 
-Run the services in the background:
-
-```bash
-docker compose up --build -d
-```
-
-Stop the containers while preserving database data:
-
-```bash
-docker compose down
-```
-
-Stop the containers and delete the PostgreSQL volume and all database data:
-
-```bash
-docker compose down -v
-```
-
-Within Docker, the API connects to PostgreSQL using the hostname `db`. Tools running on the host, such as DBeaver, connect using `localhost:5432`.
-
-## Run Locally
-
-Start only PostgreSQL with Docker:
-
+### 3. Running Locally
+Start PostgreSQL and start the dev server:
 ```bash
 docker compose up -d db
-```
-
-Install Python dependencies:
-
-```bash
 uv sync
-```
-
-Apply database migrations:
-
-```bash
 uv run alembic upgrade head
-```
-
-Start the development server:
-
-```bash
 uv run uvicorn app.main:app --reload
 ```
 
+---
+
 ## Database Migrations
+- **Apply migrations:** `uv run alembic upgrade head`
+- **Roll back:** `uv run alembic downgrade -1`
+- **Create migration:** `uv run alembic revision --autogenerate -m "description"`
 
-Apply migrations:
+---
 
-```bash
-uv run alembic upgrade head
-```
+## API Endpoints (`/api/v1`)
 
-Roll back the most recent migration:
+| Method | Route | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/users/` | Register a user | No |
+| `POST` | `/auth/login` | Login & receive JWT | No |
+| `GET` | `/tasks/` | List user tasks | Yes |
+| `POST` | `/tasks/` | Create a task | Yes |
+| `PATCH` | `/tasks/{id}` | Update a task | Yes |
+| `DELETE` | `/tasks/{id}` | Delete a task | Yes |
 
-```bash
-uv run alembic downgrade -1
-```
+*Auth header format:* `Authorization: Bearer <token>`
 
-Create a migration after changing the SQLAlchemy models:
-
-```bash
-uv run alembic revision --autogenerate -m "describe the change"
-```
-
-## API Routes
-
-The API prefix is `/api/v1`.
-
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/v1/users/` | Register a user |
-| `POST` | `/api/v1/auth/login` | Login and receive a JWT |
-| `GET` | `/api/v1/tasks/` | List the authenticated user's tasks |
-| `POST` | `/api/v1/tasks/` | Create a task |
-| `GET` | `/api/v1/tasks/{task_id}` | Get a task |
-| `PATCH` | `/api/v1/tasks/{task_id}` | Update a task |
-| `DELETE` | `/api/v1/tasks/{task_id}` | Delete a task |
-
-Authenticated requests use this header:
-
-```http
-Authorization: Bearer <access-token>
-```
+---
 
 ## Testing
 
-Run the test suite:
-
+Run unit & integration tests:
 ```bash
 uv run pytest
 ```
 
-The PostgreSQL integration tests use a separate database exposed on port `5433`. Start it with:
-
+To run tests against the separate test database (`port 5433`):
 ```bash
 docker compose -f docker-compose.test.yml up -d
-```
-
-The test database connection is:
-
-```text
-Host: localhost
-Port: 5433
-Database: task_tracker_test
-Username: admin
-Password: password
-```
-
-Stop the test database and remove its data:
-
-```bash
+uv run pytest
 docker compose -f docker-compose.test.yml down -v
 ```
 
-## Frontend Integration
 
-A frontend running on the host can use this base URL:
-
-```text
-http://localhost:8000/api/v1
-```
-
-Frontend repository: [Task Tracker Frontend](https://github.com/johnrey1998/task-tracker-frontend)
