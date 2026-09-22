@@ -28,7 +28,7 @@ cp .env.example .env
 ```bash
 docker compose up --build
 ```
-- API available at `http://localhost:8000/api/v1` (Swagger Docs at `/docs`)
+- API available at `http://localhost:8000/api/v1`
 - Stop containers: `docker compose down`
 - Stop & wipe data: `docker compose down -v`
 
