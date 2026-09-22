@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     token_expiration_hours: int = 8
 
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @computed_field
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+
     @computed_field
     @property
     def database_url(self) -> str:
