@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @computed_field
     @property
